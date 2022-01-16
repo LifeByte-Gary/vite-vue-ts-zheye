@@ -795,7 +795,3 @@ See more at [official website](https://next.router.vuejs.org/guide/).
 ## ## Integrate CSS Pre-processor
 
 // TODO
-
-## ## Use Hooks
-
-// TODO
