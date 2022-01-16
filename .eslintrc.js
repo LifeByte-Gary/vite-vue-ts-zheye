@@ -24,7 +24,9 @@ module.exports = {
         tsx: 'never'
       }
     ],
-    'vue/script-setup-uses-vars': 'error'
+    'vue/script-setup-uses-vars': 'error',
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': 'error'
   },
   settings: {
     'import/resolver': {
