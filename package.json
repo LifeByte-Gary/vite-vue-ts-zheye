@@ -10,6 +10,7 @@
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.vue --fix"
   },
   "dependencies": {
+    "eslint-import-resolver-typescript": "^2.5.0",
     "vue": "^3.2.25"
   },
   "devDependencies": {
