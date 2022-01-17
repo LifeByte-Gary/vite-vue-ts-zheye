@@ -1,7 +1,8 @@
 import axios from 'axios'
+import config from '@/config'
 
 const instance = axios.create({
-  baseURL: 'http://apis.imooc.com/api',
+  baseURL: `${config.services.apiBaseUrl}${config.services.apiVersion ? `/v${config.services.apiVersion}` : ''}`,
   timeout: 3000,
   headers: {}
 })

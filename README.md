@@ -562,29 +562,79 @@ through the files and get familiar with the options available to you.
 
 > Configuration file acts as a pre-process for environment settings, so do not set static variables as global variables (e.g. `direction_up: 'up'`). There is a better solution in TypeScript (enum or global variables).
 
-> Note:
->
-> As `config()` helper function is a better and safer way to access environment variables, so never use `import.meta.env` to get env settings in file outside `config` directory.
+### ### File Structure
 
-**Example:**
+```text
+|-- src/
+    |-- config/
+        |-- index.ts    // group configs and export
+        |-- app.ts      // App configs: name, mode, baseUrl etc.
+        |-- services    // Back-end API service configs and other third-party services configs: Back-end API sever url, Google reCaptcha site key & site secret
+        |-- ...
+```
 
-<details>
-<summary>Expand example</summary>
+### ### Encapsulation
 
-Set configs
+#### #### Set environment variables in `.env` files
+
+See more details at [Vite official website](https://vitejs.dev/guide/env-and-mode.html).
+
+```.dotenv
+# ./src/.env.development
+
+## Do not forget to set environment key in other .env.[mode] files and .env.[mode].local files.
+
+VITE_APP_MODE=development
+
+# API settings
+VITE_API_BASE_URL=http://backend-url/api
+
+###
+# !!! Set sensitive variables in .env.[mode].local file so that they will not be uploaded by git.
+###
+VITE_API_GOOGLE_RECAPTCHA_SITE_KEY=   # Should always be empty here!!
+```
+
+```.dotenv
+# ./src/.env.development.local
+
+VITE_APP_MODE=development
+
+VITE_API_BASE_URL=http://backend-url/api
+
+# !!! Set sensitive variables in .env.[mode].local file so that they will not be uploaded by git.
+VITE_API_GOOGLE_RECAPTCHA_SITE_KEY=XXXXXXX   # Should always be empty here!!
+```
+**IntelliSense for TypeScript**
 
 ```typescript
-// @/configs/app.ts
+// ./src/typings/env.d.ts
 
-interface AppConfig {
-  readonly name: string // !!App name must not be changed, so it should be *readonly*!!
-  readonly mode: string
-  readonly dev: boolean
-  readonly prod: boolean
-  readonly baseUrl: string
+interface ImportMetaEnv {
+  readonly VITE_APP_NAME: string
+  readonly VITE_APP_MODE: string
+  readonly VITE_API_GOOGLE_RECAPTCHA_SITE_KEY: string
+  // more env variables...
 }
 
-const app: AppConfig = {
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
+```
+
+#### #### Parse environment variables in `*.ts` config files.
+```typescript
+// ./src/config/app.ts
+
+interface AppConfig {
+  name: string
+  mode: string
+  dev: boolean
+  prod: boolean
+  baseUrl: string
+}
+
+const app: Readonly<AppConfig> = {
   // App name.
   name: import.meta.env.VITE_APP_NAME,
 
@@ -602,44 +652,71 @@ const app: AppConfig = {
 }
 
 export default app
+
 ```
 
-Export config module
+#### #### Export configs in `./src/config/index.ts`
 
 ```typescript
-// @/configs/index.ts
+import app from '@/config/app'
+import services from '@/config/services'
 
-import app from '@/configs/app'
+const configs = {
+  app,
+  services
+}
 
-export default { app }
-```
-
-`config()` helper function
-
-```typescript
-// @/utils/config.ts
-
-import configs from '@/configs'
-
-const appConfig = () => {
+// Define useConfig() composition function for Vue components.
+export const useConfig = () => {
   return configs
 }
 
-// App mode checking is frenquently used, so we also build a function for it.
-const appMode = (mode?: string): string | boolean => {
-  if (!mode) {
-    // If there is no argument passed, return current App mode.
-    return appConfig().app.mode
-  } else {
-    // If argument is passed, check whether current App mode is given App mode.
-    return appConfig().app.mode === mode
-  }
+// App mode checking is frequently used, so we also build a function for it.
+export const appMode = (mode?: string): string | boolean => {
+  // If there is no argument passed, return current App mode.
+  // If mode argument is passed, check whether current App mode is given App mode.
+  return mode ? configs.app.mode === mode : configs.app.mode
 }
 
-export { appConfig, appMode }
+export default configs
+
 ```
 
-</details>
+#### #### Usage
+- In Vue components: use `useConfig()` composition function.
+
+```vue
+<template>
+  <div></div>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { useConfig } from '@/config'
+
+export default defineComponent({
+  setup() {
+    const config = useConfig()
+
+    const appName = config.app.name
+  }
+})
+</script>
+```
+
+- In `*.ts` files: import and use `config` directly.
+
+```typescript
+// *.ts
+
+import config from "./index";
+
+const appName = config.app.name
+```
+
+> Note:
+>
+> **NEVER** use `import.meta.env` to get env settings outside `config` directory. Instead, use `config` (in `.ts` files) or `useConfig()` (in Vue components).
 
 ## ## Integrate Vue Router
 
@@ -1101,9 +1178,9 @@ const asyncFunction = async () => {
     const response = await api.requests.post.getPostList()
     const postList = response?.data
     // Handle postList ...
-    
+
     return postList
-    
+
   } catch (error) {
     // Handle error ...
   }
