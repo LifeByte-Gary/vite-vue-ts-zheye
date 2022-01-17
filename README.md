@@ -59,34 +59,34 @@ $ nvm install stable
 ### ### Initialise Vite Project
 
 1. Run `npm init @vitejs/app`
-  1. Project name: some-name
-  2. Select a framework: vue
-  3. Select a variant: vue-ts
-2. Install dependencies: Run `npm install`
-3. Boot project: Run `npm run dev`
+1. Project name: some-name
+1. Select a framework: vue
+1. Select a variant: vue-ts
+1. Install dependencies: Run `npm install`
+1. Boot project: Run `npm run dev`
 
 ### ### Config `vite.config.ts`
 
 See more Vite config options at [Vite official website](https://vitejs.dev/config/).
 
 ```typescript
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
 // 如果编辑器提示 path 模块找不到，则可以安装一下 @types/node -> npm i @types/node -D
-import { resolve } from "path";
+import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      "@": resolve(__dirname, "src"), // 设置 `@` 指向 `src` 目录
-    },
+      '@': resolve(__dirname, 'src') // 设置 `@` 指向 `src` 目录
+    }
   },
-  base: "./", // 设置打包路径
+  base: './', // 设置打包路径
   server: {
     port: 4000, // 设置服务启动端口号
     open: true, // 设置服务启动时是否自动打开浏览器
-    cors: true, // 允许跨域
+    cors: true // 允许跨域
 
     // 设置代理，根据我们项目实际情况配置
     // proxy: {
@@ -97,8 +97,8 @@ export default defineConfig({
     //     rewrite: (path) => path.replace('/api/', '/')
     //   }
     // }
-  },
-});
+  }
+})
 ```
 
 Config `tsconfig.json` for TypeScript support
@@ -114,7 +114,7 @@ Config `tsconfig.json` for TypeScript support
       ]
     }
   },
-  
+
   // ...
 }
 ```
@@ -158,15 +158,7 @@ $ npm install --save-dev --save-exact prettier
 Create config file `.prettierrc` at root path
 
 ```yaml
-{
-  "useTabs": false,
-  "tabWidth": 2,
-  "printWidth": 200,
-  "singleQuote": true,
-  "trailingComma": "none",
-  "bracketSpacing": true,
-  "semi": false
-}
+{ 'useTabs': false, 'tabWidth': 2, 'printWidth': 200, 'singleQuote': true, 'trailingComma': 'none', 'bracketSpacing': true, 'semi': false }
 ```
 
 See more config options at [Prettier official website](https://prettier.io/docs/en/options.html).
@@ -204,24 +196,41 @@ $ npx eslint --init
 ```
 
 1. How would you like to use ESLint?
-  - \> **To check syntax, find problems, and enforce code style**
+
+- \> **To check syntax, find problems, and enforce code style**
+
 2. What type of modules does your project use?
-  - \> **JavaScript modules (import/export)**
+
+- \> **JavaScript modules (import/export)**
+
 3. Which framework does your project use?
-  - \> **Vue.js**
+
+- \> **Vue.js**
+
 4. Does your project use TypeScript?
-  - \> **Yes**
+
+- \> **Yes**
+
 5. Where does your code run?
-  - \> **Browser**
-  - \> **Node**
+
+- \> **Browser**
+- \> **Node**
+
 6. How would you like to define a style for your project?
-  - \> **Use a popular style guide**
+
+- \> **Use a popular style guide**
+
 7. Which style guide do you want to follow?
-  - \> **Airbnb: https://github.com/airbnb/javascript**
+
+- \> **Airbnb: https://github.com/airbnb/javascript**
+
 8. What format do you want your config file to be in?
-  - \> **JavaScript**
+
+- \> **JavaScript**
+
 9. Would you like to install them now with npm?
-  - \> **Yes**
+
+- \> **Yes**
 
 ### ### Config `.eslintrc.js`
 
@@ -293,7 +302,7 @@ module.exports = {
     'plugin:vue/vue3-essential',
     'airbnb-base',
     'plugin:prettier/recommended' // Add prettier plugin
-  ],
+  ]
   // ...
 }
 ```
@@ -378,7 +387,7 @@ module.exports = {
         ts: 'never',
         tsx: 'never'
       }
-    ],
+    ]
 
     // ...
   }
@@ -491,7 +500,7 @@ Or use it in a Vue component:
 ```vue
 <!-- someComponent.vue -->
 
-<script lang='ts'>
+<script lang="ts">
 import { defineComponent, PropType } from 'vue'
 import { User } from '@/types/moduels/user.ts'
 
@@ -558,6 +567,7 @@ through the files and get familiar with the options available to you.
 > As `config()` helper function is a better and safer way to access environment variables, so never use `import.meta.env` to get env settings in file outside `config` directory.
 
 **Example:**
+
 <details>
 <summary>Expand example</summary>
 
@@ -633,7 +643,7 @@ export { appConfig, appMode }
 
 ## ## Integrate Vue Router
 
-### ### Install Vue Router
+### ### Installation
 
 ```shell
 $ npm install vue-router@4
@@ -666,42 +676,42 @@ Config and export router in `./src/router/index.ts`
 ```typescript
 // ./src/router/index.ts
 
-import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
-import Home from "@/views/home.vue";
+import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
+import Home from '@/views/home.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
-    path: "/",
-    name: "Home",
-    component: Home,
+    path: '/',
+    name: 'Home',
+    component: Home
   }
   // ...
-];
+]
 
 const router = createRouter({
   history: createWebHashHistory(),
-  routes,
-});
+  routes
+})
 
-export default router;
+export default router
 ```
 
 Use router config in `./src/main.ts`
 
 ```typescript
-import { createApp } from "vue";
-import App from "./App.vue";
-import router from "./router/index";
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router/index'
 
 const app = createApp(App)
 
 // Use router config.
 app.use(router)
 
-app.mount("#app");
+app.mount('#app')
 ```
 
-#### #### Move route settings from  `./src/router/index.ts` into `./src/router/routes` folder.
+#### #### Move route settings from `./src/router/index.ts` into `./src/router/routes` folder.
 
 1. Categorise routes in needed
 
@@ -786,7 +796,74 @@ See more at [official website](https://next.router.vuejs.org/guide/).
 
 ## ## Integrate Vuex
 
-// TODO
+### ### Installation
+
+```shell
+$ npm install vuex@next --save
+```
+
+### ### Refactoring
+
+#### #### Move logic to `./src/store` directory
+
+Config Vuex in `./src/store/index.ts`
+
+```typescript
+import { createStore } from 'vuex'
+
+const defaultState: State = {
+  // Some default states
+}
+
+export const store = createStore({
+  state() {
+    return defaultState
+  },
+  mutations: {},
+  actions: {},
+  getters: {}
+})
+```
+
+Use Config in `./src/main.ts`:
+
+```typescript
+import store from './store/index'
+
+const app = createApp(App)
+
+// Use Vuex
+app.use(store)
+
+app.mount('#app')
+```
+
+#### #### TypeScript Support
+
+Please follow [the official guide](https://next.vuex.vuejs.org/guide/typescript-support.html).
+
+> As we will not use `this.$store` property in Vue 3 (we use `useStore()` hook function instead), there is no need to type `$store` property.
+>
+> If you need to expand other type declarations relative to Vuex, please put them in `./src/typeings/vuex.d.ts`.
+
+#### #### File structure
+
+Vuex doesn't really restrict how you structure your code. Rather, it enforces a set of high-level principles:
+
+1. Application-level state is centralized in the store.
+
+2. The only way to mutate the state is by committing mutations, which are synchronous transactions.
+
+3. Asynchronous logic should be encapsulated in, and can be composed with actions.
+
+As long as you follow these rules, it's up to you how to structure your project. If your store file gets too big, simply
+start splitting the actions, mutations and getters into separate files.
+
+For any non-trivial app, we will likely need to leverage modules. Here's an example project structure:
+
+```text
+
+```
 
 ## ## Integrate Axios
 
