@@ -649,7 +649,7 @@ export { appConfig, appMode }
 $ npm install vue-router@4
 ```
 
-### ### Refactoring
+### ### Encapsulation
 
 #### #### Move logic to `./src/router` directory
 
@@ -802,7 +802,7 @@ See more at [official website](https://next.router.vuejs.org/guide/).
 $ npm install vuex@next --save
 ```
 
-### ### Refactoring
+### ### Encapsulation
 
 #### #### Move logic to `./src/store` directory
 
@@ -862,12 +862,255 @@ start splitting the actions, mutations and getters into separate files.
 For any non-trivial app, we will likely need to leverage modules. Here's an example project structure:
 
 ```text
-
+|-- src/
+    |-- store/
+        ├── index.js          # where we assemble modules and export the store
+        ├── actions.js        # root actions
+        ├── mutations.js      # root mutations
+        └── modules/
+            ├── cart.js       # cart module
+            └── products.js   # products module
 ```
 
 ## ## Integrate Axios
 
-// TODO
+### ### Installation
+
+```shell
+$ npm install axios
+```
+
+### ### Encapsulation
+
+#### #### Config Axios in `./src/http` directory
+
+// Encapsulate axios configs in `index.ts`: base URL, headers, timeout, interceptors, etc.
+
+```typescript
+// ./src/http/index.ts
+
+import axios from '@/http/axios'
+import { AxiosRequestConfig } from 'axios'
+
+const get = async (url: string, configs?: AxiosRequestConfig) => {
+  try {
+    const response = await axios.get(url, configs)
+
+    // Define global GET response handler here.
+
+    return response
+  } catch (error) {
+    // Define global GET error handler here.
+
+    throw error
+  }
+}
+
+const post = async (url: string, data?: any, configs?: AxiosRequestConfig) => {
+  // Return Axios request directly if you have neither global response nor error handler.
+  return axios.post(url, data, configs)
+}
+
+export default {
+  get,
+  post
+}
+
+```
+
+// Packing request methods in `requests.ts`: get, post, delete, uploader, etc.
+
+```typescript
+// ./src/http/axios.ts
+
+import axios from 'axios'
+
+const instance = axios.create({
+  baseURL: 'http://apis.imooc.com/api',
+  timeout: 3000,
+  headers: {}
+})
+
+// Define Interceptors ...
+
+export default instance
+```
+
+#### #### Define APIs in `./src/apis` directory.
+
+File structure:
+
+```text
+|-- src/
+    |-- apis/
+        |-- index.ts
+        |-- authApis.ts
+        |-- postApis.ts
+        |-- ...
+```
+
+Define apis by model / service in `*Api.ts`:
+
+```typescript
+// ./src/types/plugins/api.ts
+
+// Declare API-relative types.
+
+export interface ApiService {
+  description?: string
+  method: 'get' | 'post' | 'put' | 'patch' | 'delete'
+  url: string
+  function: Function
+}
+
+export type ApiServices = ApiService[]
+
+```
+
+```typescript
+// ./src/apis/postApi.ts
+
+import http from '@/http'
+import { ApiServices } from '@/types/plugins/api'
+
+const getPostList = async () => {
+  try {
+    const response = await http.get(`/posts/index`)
+
+    // Define API-level response handler here ...
+
+    return response
+  } catch (error) {
+    // Define API-level error handler here ...
+
+    throw error
+  }
+}
+
+export const postServices: ApiServices = [
+  {
+    description: 'Get the list of post',
+    url: `/posts/index`,
+    method: 'get',
+    function: getPostList
+  }
+]
+
+export default {
+  getPostList
+}
+```
+
+```typescript
+// ./src/apis/authApi.ts
+
+import http from '@/http'
+import { ApiServices } from '@/types/plugins/api'
+
+const login = (data: { username: string; password: string }) => {
+  // Return post async request function directly if there is neither API-level response hendler or error handler.
+  return http.post(`/login`, data)
+}
+
+export const authServices: ApiServices = [
+  {
+    description: 'Login user by username and password',
+    url: `/login`,
+    method: 'post',
+    function: login
+  }
+]
+
+export default {
+  login
+}
+
+```
+
+Config API module in `./src/apps/index.ts`:
+
+```typescript
+import authApis, { authServices } from '@/api/authApis'
+import postApis, { postServices } from '@/api/postApis'
+
+// A list of all API services details.
+const services = [...authServices, ...postServices]
+
+const requests = {
+  auth: authApis,
+  post: postApis
+}
+
+// Define more configs
+
+// Define a composition function for Vue components.
+export const useApi = () => {
+  return requests
+}
+
+export default {
+  requests,
+  services
+  // export more configs
+}
+```
+
+Now we are ready to request APIs in `.ts` files or Vue components, easy and clean!
+
+- Use `useApi()` composition function in Vue components.
+
+```vue
+// ./src/views/post/PostListPage.vue
+<template>
+  <!-- Page view -->
+</template>
+<script lang="ts">
+import { defineComponent } from 'vue'
+import useApi from "@/api";
+import { onMounted } from "@vue/runtime-core";
+
+export default defineComponent({
+  setup() {
+    const api = useApi()
+
+    onMounted(() => {
+      api.post
+        .getPostList()
+        .then((response) => {
+          const postList = response?.data
+          // Handle postList
+        })
+        .catch((error) => {
+          // Handle error
+        })
+    })
+  }
+})
+</script>
+```
+
+- Use `api.requests` property in `.ts` files. You can use these asynchronous API requests with async / await.
+
+```typescript
+// someFile.ts
+
+import api from '@/api'
+
+const asyncFunction = async () => {
+  try {
+    const response = await api.requests.post.getPostList()
+    const postList = response?.data
+    // Handle postList ...
+    
+    return postList
+    
+  } catch (error) {
+    // Handle error ...
+  }
+}
+
+asyncFunction()
+```
 
 ## ## Integrate CSS Pre-processor
 
