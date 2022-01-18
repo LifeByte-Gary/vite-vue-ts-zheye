@@ -2,6 +2,8 @@ import { createApp } from 'vue'
 import router from '@/router'
 import { key, store } from '@/store'
 import App from './App.vue'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap'
 
 const app = createApp(App)
 
