@@ -604,6 +604,7 @@ VITE_API_BASE_URL=http://backend-url/api
 # !!! Set sensitive variables in .env.[mode].local file so that they will not be uploaded by git.
 VITE_API_GOOGLE_RECAPTCHA_SITE_KEY=XXXXXXX   # Should always be empty here!!
 ```
+
 **IntelliSense for TypeScript**
 
 ```typescript
@@ -623,6 +624,7 @@ interface ImportMeta {
 ```
 
 #### #### Parse environment variables in config files under `./src/configs/.
+
 ```typescript
 // ./src/configs/app.ts
 
@@ -678,9 +680,11 @@ export default configs
 ```
 
 #### #### Usage
+
 - Use `config` utility module and its functions in your code.
 
 ```vue
+
 <template>
   <div></div>
 </template>
@@ -944,72 +948,146 @@ $ npm install axios
 
 ### ### Encapsulation
 
-#### #### Config Axios under `./src/axios` directory
+#### #### Config Axios
 
-- Encapsulate axios configs in `index.ts`: base URL, headers, timeout, interceptors, etc.
+Define a function to create template axios instance, this can be used to customise multiple axios instance that share
+same general configurations. (e.g. HTTP axios instance and API axios instance share same general `timeout` config and
+general `response interceptors`, though they also have their own `baseUrl` and `request interceptors`).
 
 ```typescript
-// ./src/http/index.ts
+// ./src/axios/index.ts
 
 import axios from 'axios'
-import config from '@/utils/config'
 
-const instance = axios.create({
-  baseURL: `${config.services.apiBaseUrl}${config.services.apiVersion ? `/v${config.services.apiVersion}` : ''}`,
-  timeout: 3000,
-  headers: {}
-})
+const createTemplateAxiosInstance = () => {
+  const instance = axios.create({
+    baseURL: '',
+    timeout: 3000,
+    headers: {}
+  })
 
-// Define Interceptors ...
+  // Define general interceptors ...
+  instance.interceptors.request.use(function() {
+    /*...*/
+  });
 
-export default instance
+  return instance
+}
+
+export default createTemplateAxiosInstance()
 ```
 
-- Packing request methods in `requests.ts`: get, post, delete, uploader, etc.
-
-```typescript
-// ./src/axios/axios.ts
-
-import axios from '@/axios/index'
-import { AxiosRequestConfig } from 'axios'
-
-const get = async (url: string, configs?: AxiosRequestConfig) => {
-  return axios.get(url, configs)
-}
-
-const post = async (url: string, data?: any, configs?: AxiosRequestConfig) => {
-  // Return Axios post request directly if you have neither global response nor error handler.
-  return axios.post(url, data, configs)
-}
-
-export default {
-  get,
-  post
-}
-
-```
-
-- Create `http` utility module for global usage
+#### #### Create `http.ts` utility module and export customised request functions
 
 ```typescript
 // ./src/utils/http.ts
-import requests from '@/axios/requests'
 
-// Custom more utility functions as you wish ...
+import axios from '@/axios'
+import { AxiosRequestConfig } from 'axios'
+import config from '@/utils/config'
 
-export default requests
+/**
+ * Create project-level HTTP client.
+ */
 
+// Create project-level axios instance.
+const httpAxiosInstance = axios
+
+// Define project-level HTTP requests.
+const httpGet = async (url: string, configs?: AxiosRequestConfig) => {
+  try {
+    const response = httpAxiosInstance.get(url, configs)
+
+    // Add project-level response handler ...
+    
+    return response
+  } catch (error) {
+    // Add project-level error handler ...
+    
+    throw error
+  }
+}
+
+const httpPost = async (url: string, data?: any, configs?: AxiosRequestConfig) => {
+  // Return Axios post request directly if you have neither global response nor error handler.
+  return httpAxiosInstance.post(url, data, configs)
+}
+
+const httpPut = async (url: string, data?: any, configs?: AxiosRequestConfig) => {
+  return httpAxiosInstance.put(url, data, configs)
+}
+
+const httpPatch = async (url: string, data?: any, configs?: AxiosRequestConfig) => {
+  return httpAxiosInstance.patch(url, data, configs)
+}
+
+const httpDelete = async (url: string, configs?: AxiosRequestConfig) => {
+  return httpAxiosInstance.delete(url, configs)
+}
+
+const httpRequests = {
+  get: httpGet,
+  post: httpPost,
+  put: httpPut,
+  patch: httpPatch,
+  delete: httpDelete
+}
+
+// Export as default so that they can be used globally in ease. (e.g. http.get())
+export default httpRequests
+
+/**
+ * Create API-level HTTP client.
+ */
+
+// Create API-level axios instance.
+const apiAxiosInstance = axios
+
+// Config api axios instance.
+apiAxiosInstance.defaults.baseURL = `${config.services.apiBaseUrl}${config.services.apiVersion ? `/v${config.services.apiVersion}` : ''}`
+
+// Define API-level HTTP requests.
+const apiGet = async (url: string, configs?: AxiosRequestConfig) => {
+  return httpRequests.get(url, configs)
+}
+
+const apiPost = async (url: string, data?: any, configs?: AxiosRequestConfig) => {
+  // Return Axios post request directly if you have neither global response nor error handler.
+  return httpRequests.post(url, data, configs)
+}
+
+const apiPut = async (url: string, data?: any, configs?: AxiosRequestConfig) => {
+  return httpRequests.put(url, data, configs)
+}
+
+const apiPatch = async (url: string, data?: any, configs?: AxiosRequestConfig) => {
+  return httpRequests.patch(url, data, configs)
+}
+
+const apiDelete = async (url: string, configs?: AxiosRequestConfig) => {
+  return httpRequests.delete(url, configs)
+}
+
+// Export API requests so that they can be used for API denfiition
+export const apiRequests = {
+  get: apiGet,
+  post: apiPost,
+  put: apiPut,
+  patch: apiPatch,
+  delete: apiDelete
+}
 ```
 
 #### #### Work with API requests
 
-- Create `./src/apis` directory to group APIs by model / services.
+- Create `./src/api` directory to group APIs by model / services.
 
 File structure:
 
 ```text
 |-- src/
-    |-- apis/
+    |-- api/
+        |-- index.ts
         |-- auth.ts
         |-- user.ts
         |-- ...
@@ -1018,56 +1096,36 @@ File structure:
 - Config APIs in where they belong to
 
 ```typescript
-// ./src/apis/user.ts
+// ./src/api/user.ts
 
-import http from '@/utils/http'
+import { apiRequests as api } from '@/utils/http'
 
 const getUserList = async () => {
-  try {
-    const response = await http.get(`/users/index`)
-
-    // Define API-level response handler here ...
-
-    return response
-  } catch (error) {
-    // Define API-level error handler here ...
-
-    throw error
-  }
+  return api.get(`/users/index`)
 }
 
-export default {
-  getPostList
-}
+export default { getUserList }
 ```
 
 ```typescript
-// ./src/apis/auth.ts
+// ./src/api/auth.ts
 
-import http from '@/utils/http'
+import { apiRequests as api } from '@/utils/http'
 
 const login = (data: { username: string; password: string }) => {
-  // Return post async request function directly if there is neither API-level response hendler or error handler.
-  return http.post(`/login`, data)
+  return api.post(`/login`, data)
 }
 
-// More APIs ...
-
-export default {
-  login
-  // ...
-}
+export default { login }
 ```
 
-- Create `api` utility module for global usage
+- Export group APIs in `./src/api/index.ts`
 
 ```typescript
-// ./src/utils/api
+// ./src/apis/index.ts
 
 import auth from '@/apis/auth'
 import post from '@/apis/post'
-
-// Custom more utility functions as you wish ...
 
 export default { auth, post }
 ```
@@ -1081,13 +1139,13 @@ Now we are ready to request APIs in `.ts` files or Vue components, easy and clea
 </template>
 <script lang="ts">
 import { defineComponent } from 'vue'
-import api from "@/utils/api";
+import api from "@/api";
 import { onMounted } from "@vue/runtime-core";
 
 export default defineComponent({
   setup() {
     onMounted(() => {
-      api.post
+      api.user
         .getUserList()
         .then((response) => {
           const userList = response?.data
@@ -1102,16 +1160,16 @@ export default defineComponent({
 </script>
 ```
 
-- Use `api.requests` property in `.ts` files. You can use these asynchronous API requests with async / await.
+- You can also use these asynchronous API requests with async / await.
 
 ```typescript
 // someFile.ts
 
-import api from '@/utils/api'
+import api from '@/api'
 
 const asyncFunction = async () => {
   try {
-    const response = await api.requests.user.getUserList()
+    const response = await api.user.getUserList()
     const userList = response?.data
     // Handle postList ...
 
