@@ -1,4 +1,4 @@
-import axios from '@/http/axios'
+import axios from '@/axios/index'
 import { AxiosRequestConfig } from 'axios'
 
 const get = async (url: string, configs?: AxiosRequestConfig) => {

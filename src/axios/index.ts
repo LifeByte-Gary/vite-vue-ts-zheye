@@ -1,5 +1,5 @@
 import axios from 'axios'
-import config from '@/config'
+import config from '@/utils/config'
 
 const instance = axios.create({
   baseURL: `${config.services.apiBaseUrl}${config.services.apiVersion ? `/v${config.services.apiVersion}` : ''}`,
