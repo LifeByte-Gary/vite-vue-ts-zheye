@@ -566,8 +566,7 @@ through the files and get familiar with the options available to you.
 
 ```text
 |-- src/
-    |-- config/
-        |-- index.ts    // group configs and export
+    |-- configs/
         |-- app.ts      // App configs: name, mode, baseUrl etc.
         |-- services    // Back-end API service configs and other third-party services configs: Back-end API sever url, Google reCaptcha site key & site secret
         |-- ...
@@ -613,6 +612,7 @@ VITE_API_GOOGLE_RECAPTCHA_SITE_KEY=XXXXXXX   # Should always be empty here!!
 interface ImportMetaEnv {
   readonly VITE_APP_NAME: string
   readonly VITE_APP_MODE: string
+  readonly VITE_API_BASE_URL: string
   readonly VITE_API_GOOGLE_RECAPTCHA_SITE_KEY: string
   // more env variables...
 }
@@ -622,9 +622,9 @@ interface ImportMeta {
 }
 ```
 
-#### #### Parse environment variables in `*.ts` config files.
+#### #### Parse environment variables in config files under `./src/configs/.
 ```typescript
-// ./src/config/app.ts
+// ./src/configs/app.ts
 
 interface AppConfig {
   name: string
@@ -655,23 +655,19 @@ export default app
 
 ```
 
-#### #### Export configs in `./src/config/index.ts`
+#### #### Create utility module and functions in `./src/utils/config.ts`
 
 ```typescript
+// ./src/utils/configs.ts
+
+// App mode checking is frequently used, so we also build a function for it.
 import app from '@/config/app'
-import services from '@/config/services'
 
 const configs = {
   app,
   services
 }
 
-// Define useConfig() composition function for Vue components.
-export const useConfig = () => {
-  return configs
-}
-
-// App mode checking is frequently used, so we also build a function for it.
 export const appMode = (mode?: string): string | boolean => {
   // If there is no argument passed, return current App mode.
   // If mode argument is passed, check whether current App mode is given App mode.
@@ -679,11 +675,10 @@ export const appMode = (mode?: string): string | boolean => {
 }
 
 export default configs
-
 ```
 
 #### #### Usage
-- In Vue components: use `useConfig()` composition function.
+- Use `config` utility module and its functions in your code.
 
 ```vue
 <template>
@@ -692,31 +687,21 @@ export default configs
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useConfig } from '@/config'
+import config, { appMode } from '@/utils/config'
 
 export default defineComponent({
   setup() {
-    const config = useConfig()
-
     const appName = config.app.name
+    const appMode = appMode()
+    const isDevMode = appMode('development')
   }
 })
 </script>
 ```
 
-- In `*.ts` files: import and use `config` directly.
-
-```typescript
-// *.ts
-
-import config from "./index";
-
-const appName = config.app.name
-```
-
 > Note:
 >
-> **NEVER** use `import.meta.env` to get env settings outside `config` directory. Instead, use `config` (in `.ts` files) or `useConfig()` (in Vue components).
+> **NEVER** use `import.meta.env` to get env settings outside `config` directory. Instead, use `config` utility module and its functions instead.
 
 ## ## Integrate Vue Router
 
@@ -959,32 +944,41 @@ $ npm install axios
 
 ### ### Encapsulation
 
-#### #### Config Axios in `./src/http` directory
+#### #### Config Axios under `./src/axios` directory
 
-// Encapsulate axios configs in `index.ts`: base URL, headers, timeout, interceptors, etc.
+- Encapsulate axios configs in `index.ts`: base URL, headers, timeout, interceptors, etc.
 
 ```typescript
 // ./src/http/index.ts
 
-import axios from '@/http/axios'
+import axios from 'axios'
+import config from '@/utils/config'
+
+const instance = axios.create({
+  baseURL: `${config.services.apiBaseUrl}${config.services.apiVersion ? `/v${config.services.apiVersion}` : ''}`,
+  timeout: 3000,
+  headers: {}
+})
+
+// Define Interceptors ...
+
+export default instance
+```
+
+- Packing request methods in `requests.ts`: get, post, delete, uploader, etc.
+
+```typescript
+// ./src/axios/axios.ts
+
+import axios from '@/axios/index'
 import { AxiosRequestConfig } from 'axios'
 
 const get = async (url: string, configs?: AxiosRequestConfig) => {
-  try {
-    const response = await axios.get(url, configs)
-
-    // Define global GET response handler here.
-
-    return response
-  } catch (error) {
-    // Define global GET error handler here.
-
-    throw error
-  }
+  return axios.get(url, configs)
 }
 
 const post = async (url: string, data?: any, configs?: AxiosRequestConfig) => {
-  // Return Axios request directly if you have neither global response nor error handler.
+  // Return Axios post request directly if you have neither global response nor error handler.
   return axios.post(url, data, configs)
 }
 
@@ -995,64 +989,42 @@ export default {
 
 ```
 
-// Packing request methods in `requests.ts`: get, post, delete, uploader, etc.
+- Create `http` utility module for global usage
 
 ```typescript
-// ./src/http/axios.ts
+// ./src/utils/http.ts
+import requests from '@/axios/requests'
 
-import axios from 'axios'
+// Custom more utility functions as you wish ...
 
-const instance = axios.create({
-  baseURL: 'http://apis.imooc.com/api',
-  timeout: 3000,
-  headers: {}
-})
+export default requests
 
-// Define Interceptors ...
-
-export default instance
 ```
 
-#### #### Define APIs in `./src/apis` directory.
+#### #### Work with API requests
+
+- Create `./src/apis` directory to group APIs by model / services.
 
 File structure:
 
 ```text
 |-- src/
     |-- apis/
-        |-- index.ts
-        |-- authApis.ts
-        |-- postApis.ts
+        |-- auth.ts
+        |-- user.ts
         |-- ...
 ```
 
-Define apis by model / service in `*Api.ts`:
+- Config APIs in where they belong to
 
 ```typescript
-// ./src/types/plugins/api.ts
+// ./src/apis/user.ts
 
-// Declare API-relative types.
+import http from '@/utils/http'
 
-export interface ApiService {
-  description?: string
-  method: 'get' | 'post' | 'put' | 'patch' | 'delete'
-  url: string
-  function: Function
-}
-
-export type ApiServices = ApiService[]
-
-```
-
-```typescript
-// ./src/apis/postApi.ts
-
-import http from '@/http'
-import { ApiServices } from '@/types/plugins/api'
-
-const getPostList = async () => {
+const getUserList = async () => {
   try {
-    const response = await http.get(`/posts/index`)
+    const response = await http.get(`/users/index`)
 
     // Define API-level response handler here ...
 
@@ -1064,97 +1036,61 @@ const getPostList = async () => {
   }
 }
 
-export const postServices: ApiServices = [
-  {
-    description: 'Get the list of post',
-    url: `/posts/index`,
-    method: 'get',
-    function: getPostList
-  }
-]
-
 export default {
   getPostList
 }
 ```
 
 ```typescript
-// ./src/apis/authApi.ts
+// ./src/apis/auth.ts
 
-import http from '@/http'
-import { ApiServices } from '@/types/plugins/api'
+import http from '@/utils/http'
 
 const login = (data: { username: string; password: string }) => {
   // Return post async request function directly if there is neither API-level response hendler or error handler.
   return http.post(`/login`, data)
 }
 
-export const authServices: ApiServices = [
-  {
-    description: 'Login user by username and password',
-    url: `/login`,
-    method: 'post',
-    function: login
-  }
-]
+// More APIs ...
 
 export default {
   login
+  // ...
 }
-
 ```
 
-Config API module in `./src/apps/index.ts`:
+- Create `api` utility module for global usage
 
 ```typescript
-import authApis, { authServices } from '@/api/authApis'
-import postApis, { postServices } from '@/api/postApis'
+// ./src/utils/api
 
-// A list of all API services details.
-const services = [...authServices, ...postServices]
+import auth from '@/apis/auth'
+import post from '@/apis/post'
 
-const requests = {
-  auth: authApis,
-  post: postApis
-}
+// Custom more utility functions as you wish ...
 
-// Define more configs
-
-// Define a composition function for Vue components.
-export const useApi = () => {
-  return requests
-}
-
-export default {
-  requests,
-  services
-  // export more configs
-}
+export default { auth, post }
 ```
 
 Now we are ready to request APIs in `.ts` files or Vue components, easy and clean!
 
-- Use `useApi()` composition function in Vue components.
-
 ```vue
-// ./src/views/post/PostListPage.vue
+// ./src/views/user/UserListPage.vue
 <template>
   <!-- Page view -->
 </template>
 <script lang="ts">
 import { defineComponent } from 'vue'
-import useApi from "@/api";
+import api from "@/utils/api";
 import { onMounted } from "@vue/runtime-core";
 
 export default defineComponent({
   setup() {
-    const api = useApi()
-
     onMounted(() => {
       api.post
-        .getPostList()
+        .getUserList()
         .then((response) => {
-          const postList = response?.data
+          const userList = response?.data
           // Handle postList
         })
         .catch((error) => {
@@ -1171,12 +1107,12 @@ export default defineComponent({
 ```typescript
 // someFile.ts
 
-import api from '@/api'
+import api from '@/utils/api'
 
 const asyncFunction = async () => {
   try {
-    const response = await api.requests.post.getPostList()
-    const postList = response?.data
+    const response = await api.requests.user.getUserList()
+    const userList = response?.data
     // Handle postList ...
 
     return postList
