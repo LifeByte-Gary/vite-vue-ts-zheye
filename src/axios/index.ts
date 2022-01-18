@@ -1,12 +1,15 @@
 import axios from 'axios'
-import config from '@/utils/config'
 
-const instance = axios.create({
-  baseURL: `${config.services.apiBaseUrl}${config.services.apiVersion ? `/v${config.services.apiVersion}` : ''}`,
-  timeout: 3000,
-  headers: {}
-})
+const createTemplateAxiosInstance = () => {
+  const instance = axios.create({
+    baseURL: '',
+    timeout: 3000,
+    headers: {}
+  })
 
-// Define Interceptors ...
+  // Define general interceptors ...
 
-export default instance
+  return instance
+}
+
+export default createTemplateAxiosInstance()
