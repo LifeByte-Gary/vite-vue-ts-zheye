@@ -51,6 +51,26 @@ const apiAxiosInstance = axios
 // Config api axios instance.
 apiAxiosInstance.defaults.baseURL = `${config.services.apiBaseUrl}${config.services.apiVersion ? `/v${config.services.apiVersion}` : ''}`
 
+apiAxiosInstance.interceptors.request.use((requestConfig) => {
+  const apiRequestConfig = requestConfig || undefined
+
+  if (apiRequestConfig) {
+    // Use Imooc API Icode.
+    // Add Icode into the URL of get requests.
+    apiRequestConfig.params = { ...requestConfig.params, icode: `${config.services.apiIcode}` }
+    // Add Icode into the body of other requests.
+    if (apiRequestConfig.data instanceof FormData) {
+      // If request uploads files, add Icode into FormData
+      apiRequestConfig.data.append('icode', `${config.services.apiIcode}`)
+    } else {
+      apiRequestConfig.data = { ...apiRequestConfig, icode: `${config.services.apiIcode}` }
+    }
+
+    return apiRequestConfig
+  }
+  return requestConfig
+})
+
 // Define API-level HTTP requests.
 const apiGet = async (url: string, configs?: AxiosRequestConfig) => {
   return httpRequests.get(url, configs)
