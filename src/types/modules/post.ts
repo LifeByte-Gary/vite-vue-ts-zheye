@@ -4,7 +4,7 @@ export interface Post {
   content: string
   image?: string
   createdAt: string
-  columnId: number
+  columnId: string
 }
 
 export type Posts = Post[]

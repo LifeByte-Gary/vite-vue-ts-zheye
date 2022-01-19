@@ -3,7 +3,8 @@ import { InjectionKey } from 'vue'
 import { Column, Columns } from '@/types/modules/column'
 import { Post, Posts } from '@/types/modules/post'
 import { User } from '@/types/modules/user'
-import { testData, testPosts } from '@/testData'
+import { testPosts } from '@/testData'
+import api from '@/api'
 
 // Define typings for the store state.
 export interface State {
@@ -17,7 +18,7 @@ export const key: InjectionKey<Store<State>> = Symbol('injection key')
 
 // Define default store state.
 const defaultState: State = {
-  columnList: testData,
+  columnList: [],
   postList: testPosts,
   user: { isLogin: false }
 }
@@ -29,24 +30,38 @@ export const store = createStore({
   },
   mutations: {
     login(state: State) {
-      const thisState = state
-
-      thisState.user = { ...state.user, isLogin: true, name: 'Gary', id: 1, columnId: 1 }
+      state.user = { ...state.user, isLogin: true, name: 'Gary', id: 1, columnId: 1 }
     },
     createPost(state: State, newPost: Post) {
       state.postList.push(newPost)
+    },
+    fetchColumns(state, newColumns) {
+      state.columnList = newColumns
     }
   },
-  actions: {},
+  actions: {
+    async fetchColumns(context) {
+      try {
+        const response = await api.column.getColumnList()
+        const columnList = response?.data.data.list
+
+        context.commit('fetchColumns', columnList)
+      } catch (error) {
+        context.commit('fetchColumns', [])
+
+        throw error
+      }
+    }
+  },
   getters: {
     getColumnById:
       (state) =>
-      (id: number): Column | undefined => {
-        return state.columnList.find((col) => col.id === id)
+      (id: string): Column | undefined => {
+        return state.columnList.find((col) => col._id === id)
       },
     getPostsByColumnId:
       (state) =>
-      (columnId: number): Posts => {
+      (columnId: string): Posts => {
         return state.postList.filter((post) => post.columnId === columnId)
       }
   }

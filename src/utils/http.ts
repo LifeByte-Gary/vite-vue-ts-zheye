@@ -52,24 +52,32 @@ const apiAxiosInstance = axios
 apiAxiosInstance.defaults.baseURL = `${config.services.apiBaseUrl}${config.services.apiVersion ? `/v${config.services.apiVersion}` : ''}`
 
 apiAxiosInstance.interceptors.request.use((requestConfig) => {
-  const apiRequestConfig = requestConfig || undefined
-
-  if (apiRequestConfig) {
+  if (requestConfig) {
     // Use Imooc API Icode.
     // Add Icode into the URL of get requests.
-    apiRequestConfig.params = { ...requestConfig.params, icode: `${config.services.apiIcode}` }
+    // eslint-disable-next-line no-param-reassign
+    requestConfig.params = { ...requestConfig.params, icode: `${config.services.apiIcode}` }
     // Add Icode into the body of other requests.
-    if (apiRequestConfig.data instanceof FormData) {
+    if (requestConfig.data instanceof FormData) {
       // If request uploads files, add Icode into FormData
-      apiRequestConfig.data.append('icode', `${config.services.apiIcode}`)
+      requestConfig.data.append('icode', `${config.services.apiIcode}`)
     } else {
-      apiRequestConfig.data = { ...apiRequestConfig, icode: `${config.services.apiIcode}` }
+      // eslint-disable-next-line no-param-reassign
+      requestConfig.data = { ...requestConfig, icode: `${config.services.apiIcode}` }
     }
-
-    return apiRequestConfig
   }
+
   return requestConfig
 })
+
+apiAxiosInstance.interceptors.response.use(
+  (response) => {
+    if (!response.data?.code) return response
+
+    return Promise.reject(response.data)
+  },
+  () => {}
+)
 
 // Define API-level HTTP requests.
 const apiGet = async (url: string, configs?: AxiosRequestConfig) => {

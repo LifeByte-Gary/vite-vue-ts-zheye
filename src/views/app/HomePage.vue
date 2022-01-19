@@ -17,7 +17,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { computed, defineComponent, onMounted } from 'vue'
 import ColumnList from '@/components/modules/column/ColumnList.vue'
 import { useStore } from '@/store'
 
@@ -29,10 +29,13 @@ export default defineComponent({
   setup() {
     const store = useStore()
 
-    const list = store.state.columnList
-    return {
-      list
-    }
+    const list = computed(() => store.state.columnList)
+
+    onMounted(() => {
+      store.dispatch('fetchColumns')
+    })
+
+    return { list }
   }
 })
 </script>

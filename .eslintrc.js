@@ -24,6 +24,8 @@ module.exports = {
         tsx: 'never'
       }
     ],
+    'no-param-reassign': 'off',
+    'no-underscore-dangle': ['error', { allow: ['_id'] }],
     'vue/script-setup-uses-vars': 'error',
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': 'error'
