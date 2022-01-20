@@ -877,18 +877,7 @@ Config Vuex in `./src/store/index.ts`
 ```typescript
 import { createStore } from 'vuex'
 
-const defaultState: State = {
-  // Some default states
-}
-
-export const store = createStore({
-  state() {
-    return defaultState
-  },
-  mutations: {},
-  actions: {},
-  getters: {}
-})
+export const store = createStore({})
 ```
 
 Use Config in `./src/main.ts`:
@@ -903,14 +892,6 @@ app.use(store)
 
 app.mount('#app')
 ```
-
-#### #### TypeScript Support
-
-Please follow [the official guide](https://next.vuex.vuejs.org/guide/typescript-support.html).
-
-> As we will not use `this.$store` property in Vue 3 (we use `useStore()` hook function instead), there is no need to type `$store` property.
->
-> If you need to expand other type declarations relative to Vuex, please put them in `./src/typeings/vuex.d.ts`.
 
 #### #### File structure
 
@@ -936,6 +917,185 @@ For any non-trivial app, we will likely need to leverage modules. Here's an exam
         └── modules/
             ├── cart.js       # cart module
             └── products.js   # products module
+```
+
+#### #### Encapsulation by modules with TypeScrip
+
+As mentioned before, it is recommended to separate store features (state, getters, mutations and actions) by module.
+Here is an example to show how to implement it with TypeScript.
+
+Imagine that we are working on an online blog system, and there is a **Column / Topic** module that handles all services
+relative to columns (including get column list, get column details, create a new column, delete a column, etc.). Now
+let's get started!
+
+- Declare type `RootState`: It is the root of all module states. Initially, it is empty if there is no module created,
+  though you can also define some keys outside modules (e.g. `version: 1`). In this case, we have type `ColumnState`.
+
+```typescript
+// ./src/types/vuex/root.ts
+
+/**
+ *  Define Vuex root types.
+ */
+import { ColumnState } from '@/types/vuex/column'
+
+export interface RootState {
+  column: ColumnState
+  // ... Other module state types
+}
+```
+
+- Then we need to declare all types for `post` module.
+
+```typescript
+// ./src/types/vuex/column.ts
+
+/**
+ *  Define Vuex types of module: column.
+ */
+import { Column, Columns } from '@/types/modules/column'
+import { ActionContext, ActionTree, GetterTree, MutationTree } from 'vuex'
+import { RootState } from '@/types/vuex/root'
+
+export interface ColumnState {
+  columnList: Columns
+  currentColumn: Column | undefined
+}
+
+export interface ColumnGetterTree extends GetterTree<ColumnState, RootState> {
+  getColumnById: (state: ColumnState) => (id: string) => Column | undefined
+}
+
+export interface ColumnMutationTree extends MutationTree<ColumnState> {
+  setColumnList: (state: ColumnState, newColumn: Columns) => void
+}
+
+export interface ColumnActionTree extends ActionTree<ColumnState, RootState> {
+  fetchColumnList: ({ commit }: ActionContext<ColumnState, RootState>) => Promise<void>
+}
+```
+
+> There are a lot of Vuex types included in this file, Learn more to see their declarations in vux source typing file. It would be very helpful to learn deeper of Vuex and TypeScript.
+
+- Now we are ready to build the `column` module. Create it under `./src/store/modules` directory.
+
+```typescript
+// ./src/store/modules/column.ts
+
+import { ColumnActionTree, ColumnGetterTree, ColumnMutationTree, ColumnState } from '@/types/vuex/column'
+import { Module } from 'vuex'
+import { RootState } from '@/types/vuex/root'
+import api from '@/api'
+import defaultAvatar from '@/assets/column.jpg'
+
+const state: ColumnState = {
+  columnList: [],
+  currentColumn: undefined
+}
+
+const getters: ColumnGetterTree = {
+  getColumnById: (columnState) => (id: string) => {
+    return columnState.columnList.find((col) => col._id === id)
+  }
+}
+
+const mutations: ColumnMutationTree = {
+  setColumnList: (columnState, newColumnList) => {
+    columnState.columnList = newColumnList
+  }
+}
+
+const actions: ColumnActionTree = {
+  fetchColumnList: async ({ commit }) => {
+    const response = await api.column.getColumnList()   // Call API request. This will be covered in the following section: 'Axios'
+    const columnList = response?.data.data.list
+
+    commit('setColumnList', columnList)
+  }
+}
+
+const module: Module<ColumnState, RootState> = {
+  namespaced: true,
+  state,
+  getters,
+  mutations,
+  actions
+}
+
+export default module
+```
+
+- Import `column` module in store `index.ts` file.
+
+```typescript
+import { createStore, Store, useStore as baseUseStore } from 'vuex'
+import { InjectionKey } from 'vue'
+import { RootState } from '@/types/vuex/root'
+import config from '@/utils/config'
+import column from '@/store/modules/column'
+
+
+// Define injection key.
+export const key: InjectionKey<Store<RootState>> = Symbol('injection key')
+
+// Create store.
+export const store = createStore({
+  modules: { auth, column, post },
+  strict: config.app.dev
+})
+
+// Simplifying usage of useStore() composition function.
+export function useStore() {
+  return baseUseStore(key)
+}
+```
+
+> We also defined the typed `InjectionKey` for TypeScript support. See more details at [official guide](https://next.vuex.vuejs.org/guide/typescript-support.html).
+
+- Next, install the store to the Vue app in `main.ts`
+
+```typescript
+// ./src/main.ts
+
+import { createApp } from 'vue'
+import { store, key } from './store'
+
+const app = createApp({ ... })
+
+// pass the injection key
+app.use(store, key)
+
+app.mount('#app')
+```
+
+- Finally, we can use `column` module in the project.
+
+```vue
+
+<template>
+<!-- // ... -->
+</template>
+
+<script lang="ts">
+import { computed, defineComponent, onMounted } from 'vue'
+import { useStore } from '@/store'
+
+export default defineComponent({
+  // ...
+  
+  setup() {
+    const store = useStore()
+
+    const columnList = computed(() => store.state.column.columnList)
+
+    onMounted(() => {
+      store.dispatch('column/fetchColumnList')
+    })
+
+    return { columnList }
+  }
+})
+</script>
 ```
 
 ## ## Integrate Axios
@@ -999,11 +1159,11 @@ const httpGet = async (url: string, configs?: AxiosRequestConfig) => {
     const response = httpAxiosInstance.get(url, configs)
 
     // Add project-level response handler ...
-    
+
     return response
   } catch (error) {
     // Add project-level error handler ...
-    
+
     throw error
   }
 }
