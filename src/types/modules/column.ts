@@ -1,6 +1,7 @@
 export interface Column {
   __v: number
   _id: string
+  title: string
   author: string
   avatar: {
     _id: string
@@ -10,7 +11,6 @@ export interface Column {
   description: string
   featured: boolean
   key: number
-  title: string
 }
 
 export type Columns = Column[]

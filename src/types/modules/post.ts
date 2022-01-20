@@ -2,7 +2,10 @@ export interface Post {
   id: number
   title: string
   content: string
-  image?: string
+  image: {
+    _id: string
+    url: string
+  }
   createdAt: string
   columnId: string
 }

@@ -1,8 +1,8 @@
 <template>
   <nav class="navbar navbar-dark bg-primary justify-content-between px-4">
     <div class="container-fluid">
-      <router-link to="/" class="navbar-brand" href="#">知乎专栏</router-link>
-      <ul v-if="!user.isLogin" class="list-inline mb-0">
+      <router-link to="/" class="navbar-brand">知乎专栏</router-link>
+      <ul v-if="!isLogin" class="list-inline mb-0">
         <li class="list-inline-item">
           <router-link :to="{ name: 'auth.login' }" class="btn btn-outline-light my-2">登陆</router-link>
         </li>
@@ -12,7 +12,7 @@
       </ul>
       <ul v-else class="list-inline mb-0">
         <li class="list-inline-item">
-          <base-dropdown :title="`Hello ${user.name}`">
+          <base-dropdown :title="`Hello ${currentUser.nickName}`">
             <base-dropdown-item>
               <router-link :to="{ name: 'posts.create' }" class="dropdown-item">新建文章</router-link>
             </base-dropdown-item>
@@ -30,19 +30,22 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue'
-import { User } from '@/types/modules/user'
+import { computed, defineComponent } from 'vue'
 import BaseDropdown from '@/components/base/BaseDropdown.vue'
 import BaseDropdownItem from '@/components/base/BaseDropdownItem.vue'
+import { useStore } from '@/store'
 
 export default defineComponent({
   name: 'TheHeader',
   components: { BaseDropdownItem, BaseDropdown },
-  props: {
-    user: {
-      type: Object as PropType<User>,
-      required: true
-    }
+  setup() {
+    const store = useStore()
+
+    const isLogin = computed(() => store.state.auth.isLogin)
+
+    const currentUser = computed(() => store.state.auth.currentUser)
+
+    return { isLogin, currentUser }
   }
 })
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <app-header :user="currentUser"></app-header>
+  <app-header></app-header>
 
   <div class="container">
     <router-view></router-view>
@@ -9,23 +9,15 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from 'vue'
+import { defineComponent } from 'vue'
 import AppHeader from '@/components/app/AppHeader.vue'
 import AppFooter from '@/components/app/AppFooter.vue'
-import { useStore } from '@/store'
 
 export default defineComponent({
   name: 'App',
   components: { AppHeader, AppFooter },
   setup() {
-    const store = useStore()
-
-    const currentUser = computed(() => {
-      return store.state.user
-    })
-    return {
-      currentUser
-    }
+    return {}
   }
 })
 </script>

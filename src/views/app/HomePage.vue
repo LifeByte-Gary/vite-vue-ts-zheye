@@ -29,10 +29,10 @@ export default defineComponent({
   setup() {
     const store = useStore()
 
-    const list = computed(() => store.state.columnList)
+    const list = computed(() => store.state.column.columnList)
 
     onMounted(() => {
-      store.dispatch('fetchColumns')
+      store.dispatch('column/fetchColumnList')
     })
 
     return { list }

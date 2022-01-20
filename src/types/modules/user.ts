@@ -1,6 +1,9 @@
 export interface User {
-  isLogin: boolean
-  name?: string
-  id?: number
-  columnId?: number
+  _id: string
+  email: string
+  nickName: string
+  description: string
+  avatar: string
+  column: string
+  createdAt: string
 }

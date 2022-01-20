@@ -8,9 +8,9 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.meta.requiresAuth && !store.state.user.isLogin) {
+  if (to.meta.requiresAuth && !store.state.auth.isLogin) {
     next({ name: 'auth.login' })
-  } else if (to.meta.redirectAuthed && store.state.user.isLogin) {
+  } else if (to.meta.redirectAuthed && store.state.auth.isLogin) {
     next({ name: 'app.home' })
   } else {
     next()
