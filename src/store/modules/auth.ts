@@ -15,12 +15,12 @@ const mutations: AuthMutationTree = {
     authState.isLogin = true
     authState.token = token
     authState.currentUser = {
-      _id: '1',
+      _id: '5f3e86d62c56ee13bb83096c',
       email: 'gary@test.com',
       nickName: 'Gary',
       description: "Gary's description",
       avatar: 'avatar.jpg',
-      column: 'column-1',
+      column: '5f3e86d62c56ee13bb83096c',
       createdAt: '2022-01-20T04:41:58.391Z'
     }
   }

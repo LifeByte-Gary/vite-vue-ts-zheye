@@ -25,6 +25,8 @@ import { InputProps } from '@/types/components/form'
 import { Post } from '@/types/modules/post'
 import { useRouter } from 'vue-router'
 import { useStore } from '@/store'
+import defaultImage from '@/assets/column.jpg'
+import { User } from '@/types/modules/user'
 
 export default defineComponent({
   name: 'PostCreatePage',
@@ -45,19 +47,23 @@ export default defineComponent({
 
     const onFormSubmit = (isValid: boolean) => {
       if (isValid) {
-        const { columnId } = store.state.user
+        const { column } = store.state.auth.currentUser as User
 
-        if (columnId) {
+        if (column) {
           const newPost: Post = {
-            columnId,
+            column: '5f3e86d62c56ee13bb83096c',
             content: contentProps.value as string,
             createdAt: new Date().toISOString(),
             id: new Date().getTime(),
-            title: titleProps.value as string
+            title: titleProps.value as string,
+            image: {
+              _id: '123',
+              url: defaultImage
+            }
           }
 
-          store.commit('createPost', newPost)
-          router.push({ name: 'columns.show', params: { id: columnId } })
+          store.commit('post/addNewPost', newPost)
+          router.push({ name: 'columns.show', params: { id: column } })
         }
       }
     }

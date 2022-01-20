@@ -1,5 +1,6 @@
 export interface Post {
   id: number
+  column: string
   title: string
   content: string
   image: {
@@ -7,7 +8,6 @@ export interface Post {
     url: string
   }
   createdAt: string
-  columnId: string
 }
 
 export type Posts = Post[]
