@@ -1,6 +1,7 @@
 import { AuthActionTree, AuthGetterTree, AuthMutationTree, AuthState } from '@/types/vuex/auth'
 import { Module } from 'vuex'
 import { RootState } from '@/types/vuex/root'
+import api from '@/api'
 
 const state: AuthState = {
   isLogin: false,
@@ -26,7 +27,14 @@ const mutations: AuthMutationTree = {
   }
 }
 
-const actions: AuthActionTree = {}
+const actions: AuthActionTree = {
+  login: async ({ commit }, payload) => {
+    const response = await api.auth.login(payload)
+    const { token } = response.data.data
+
+    commit('login', token)
+  }
+}
 
 const module: Module<AuthState, RootState> = {
   namespaced: true,

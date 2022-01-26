@@ -36,10 +36,17 @@ export default defineComponent({
     ]
     const passwordVal = ref('')
     const passwordRules: InputRules = [{ type: 'required', message: '密码不能为空' }]
+
     const onFormSubmit = (result: boolean) => {
       if (result) {
-        router.push({ name: 'app.home' })
-        store.commit('auth/login')
+        store
+          .dispatch('auth/login', {
+            email: emailVal.value,
+            password: passwordVal.value
+          })
+          .then(() => {
+            router.push({ name: 'app.home' })
+          })
       }
     }
     return {

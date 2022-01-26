@@ -53,17 +53,14 @@ apiAxiosInstance.defaults.baseURL = `${config.services.apiBaseUrl}${config.servi
 
 apiAxiosInstance.interceptors.request.use((requestConfig) => {
   if (requestConfig) {
-    // Use Imooc API Icode.
-    // Add Icode into the URL of get requests.
-    // eslint-disable-next-line no-param-reassign
-    requestConfig.params = { ...requestConfig.params, icode: `${config.services.apiIcode}` }
-    // Add Icode into the body of other requests.
-    if (requestConfig.data instanceof FormData) {
+    if (requestConfig.method === 'get') {
+      requestConfig.params = { ...requestConfig.params, icode: `${config.services.apiIcode}` }
+    } else if (requestConfig.data instanceof FormData) {
       // If request uploads files, add Icode into FormData
       requestConfig.data.append('icode', `${config.services.apiIcode}`)
     } else {
       // eslint-disable-next-line no-param-reassign
-      requestConfig.data = { ...requestConfig, icode: `${config.services.apiIcode}` }
+      requestConfig.data = { ...requestConfig.data, icode: `${config.services.apiIcode}` }
     }
   }
 

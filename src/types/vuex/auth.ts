@@ -1,4 +1,4 @@
-import { ActionTree, GetterTree, MutationTree } from 'vuex'
+import { ActionContext, ActionTree, GetterTree, MutationTree } from 'vuex'
 import { RootState } from '@/types/vuex/root'
 import { User } from '@/types/modules/user'
 
@@ -14,4 +14,6 @@ export interface AuthMutationTree extends MutationTree<AuthState> {
   login: (authState: AuthState, token: string) => void
 }
 
-export interface AuthActionTree extends ActionTree<AuthState, RootState> {}
+export interface AuthActionTree extends ActionTree<AuthState, RootState> {
+  login: ({ commit }: ActionContext<AuthState, RootState>, payload: { email: string; password: string }) => Promise<void>
+}
