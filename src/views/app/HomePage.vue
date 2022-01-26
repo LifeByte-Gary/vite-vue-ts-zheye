@@ -1,4 +1,5 @@
 <template>
+  <app-loader v-if="isLoadingColumnList"></app-loader>
   <div class="home-page">
     <section class="py-5 text-center container">
       <div class="row py-lg-5">
@@ -17,13 +18,16 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted } from 'vue'
+import { computed, defineComponent, onMounted, ref } from 'vue'
 import ColumnList from '@/components/modules/column/ColumnList.vue'
 import { useStore } from '@/store'
+import useLoader from '@/hooks/useLoader'
+import AppLoader from '@/components/app/AppLoader.vue'
 
 export default defineComponent({
   name: 'HomePage',
   components: {
+    AppLoader,
     ColumnList
   },
   setup() {
@@ -31,11 +35,14 @@ export default defineComponent({
 
     const list = computed(() => store.state.column.columnList)
 
-    onMounted(() => {
-      store.dispatch('column/fetchColumnList')
+    const isLoadingColumnList = ref(true)
+
+    onMounted(async () => {
+      const { loading } = await useLoader(store.dispatch('column/fetchColumnList'))
+      isLoadingColumnList.value = loading.value
     })
 
-    return { list }
+    return { list, isLoadingColumnList }
   }
 })
 </script>
