@@ -3,7 +3,7 @@ import { RootState } from '@/types/vuex/root'
 import { User } from '@/types/modules/user'
 
 export interface AuthState {
-  isLogin: boolean
+  isLoggedIn: boolean
   token: string | null
   currentUser: User | undefined
 }
@@ -11,9 +11,12 @@ export interface AuthState {
 export interface AuthGetterTree extends GetterTree<AuthState, RootState> {}
 
 export interface AuthMutationTree extends MutationTree<AuthState> {
-  login: (authState: AuthState, token: string) => void
+  setToken: (authState: AuthState, token: string) => void
+  setCurrentUser: (authState: AuthState, currentUser: User) => void
+  login: (authState: AuthState) => void
 }
 
 export interface AuthActionTree extends ActionTree<AuthState, RootState> {
-  login: ({ commit }: ActionContext<AuthState, RootState>, payload: { email: string; password: string }) => Promise<void>
+  login: ({ commit, dispatch }: ActionContext<AuthState, RootState>, payload: { email: string; password: string }) => Promise<void>
+  fetchCurrentUser: ({ commit }: ActionContext<AuthState, RootState>) => Promise<void>
 }

@@ -2,7 +2,7 @@
   <nav class="navbar navbar-dark bg-primary justify-content-between px-4">
     <div class="container-fluid">
       <router-link to="/" class="navbar-brand">知乎专栏</router-link>
-      <ul v-if="!isLogin" class="list-inline mb-0">
+      <ul v-if="!isLoggedIn" class="list-inline mb-0">
         <li class="list-inline-item">
           <router-link :to="{ name: 'auth.login' }" class="btn btn-outline-light my-2">登陆</router-link>
         </li>
@@ -12,7 +12,7 @@
       </ul>
       <ul v-else class="list-inline mb-0">
         <li class="list-inline-item">
-          <base-dropdown :title="`Hello ${currentUser.nickName}`">
+          <base-dropdown :title="`Hello ${currentUser?.nickName}`">
             <base-dropdown-item>
               <router-link :to="{ name: 'posts.create' }" class="dropdown-item">新建文章</router-link>
             </base-dropdown-item>
@@ -41,11 +41,11 @@ export default defineComponent({
   setup() {
     const store = useStore()
 
-    const isLogin = computed(() => store.state.auth.isLogin)
+    const isLoggedIn = computed(() => store.state.auth.isLoggedIn)
 
     const currentUser = computed(() => store.state.auth.currentUser)
 
-    return { isLogin, currentUser }
+    return { isLoggedIn, currentUser }
   }
 })
 </script>

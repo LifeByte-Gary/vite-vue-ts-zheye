@@ -2,9 +2,10 @@ import { AuthActionTree, AuthGetterTree, AuthMutationTree, AuthState } from '@/t
 import { Module } from 'vuex'
 import { RootState } from '@/types/vuex/root'
 import api from '@/api'
+import { apiAxiosInstance } from '@/utils/http'
 
 const state: AuthState = {
-  isLogin: false,
+  isLoggedIn: false,
   token: null,
   currentUser: undefined
 }
@@ -12,27 +13,38 @@ const state: AuthState = {
 const getters: AuthGetterTree = {}
 
 const mutations: AuthMutationTree = {
-  login: (authState, token) => {
-    authState.isLogin = true
+  setToken: (authState, token) => {
+    authState.isLoggedIn = true
     authState.token = token
-    authState.currentUser = {
-      _id: '5f3e86d62c56ee13bb83096c',
-      email: 'gary@test.com',
-      nickName: 'Gary',
-      description: "Gary's description",
-      avatar: 'avatar.jpg',
-      column: '5f3e86d62c56ee13bb83096c',
-      createdAt: '2022-01-20T04:41:58.391Z'
+
+    apiAxiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`
+  },
+  setCurrentUser: (authState, currentUser) => {
+    authState.currentUser = currentUser
+  },
+  login: (authState) => {
+    if (authState.token && authState.currentUser) {
+      authState.isLoggedIn = true
     }
   }
 }
 
 const actions: AuthActionTree = {
-  login: async ({ commit }, payload) => {
+  login: async ({ commit, dispatch }, payload) => {
     const response = await api.auth.login(payload)
     const { token } = response.data.data
 
-    commit('login', token)
+    commit('setToken', token)
+
+    await dispatch('fetchCurrentUser')
+
+    commit('login')
+  },
+  fetchCurrentUser: async ({ commit }) => {
+    const response = await api.auth.fetchCurrentUser()
+    const currentUser = response.data.data
+
+    commit('setCurrentUser', currentUser)
   }
 }
 

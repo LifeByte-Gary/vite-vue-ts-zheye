@@ -3,7 +3,10 @@ export interface User {
   email: string
   nickName: string
   description: string
-  avatar: string
+  avatar: {
+    _id: string
+    url: string
+  }
   column: string
-  createdAt: string
+  createdAt?: string
 }

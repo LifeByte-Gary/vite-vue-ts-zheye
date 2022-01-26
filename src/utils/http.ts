@@ -46,7 +46,7 @@ export default httpRequests
  */
 
 // Create API-level axios instance.
-const apiAxiosInstance = axios
+export const apiAxiosInstance = axios
 
 // Config api axios instance.
 apiAxiosInstance.defaults.baseURL = `${config.services.apiBaseUrl}${config.services.apiVersion ? `/v${config.services.apiVersion}` : ''}`
