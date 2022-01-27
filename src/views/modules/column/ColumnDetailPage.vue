@@ -19,7 +19,7 @@ import { computed, defineComponent, onMounted, reactive } from 'vue'
 import { useRoute } from 'vue-router'
 import PostList from '@/components/modules/post/PostList.vue'
 import { useStore } from '@/store'
-import api from '@/api'
+import api from '@/services'
 import { Column } from '@/types/modules/column'
 import defaultAvatar from '@/assets/column.jpg'
 

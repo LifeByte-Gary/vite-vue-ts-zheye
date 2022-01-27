@@ -727,12 +727,12 @@ followings.
     |-- router/
         |-- index.ts
         |-- middlewares/
-            |-- authMiddlewares.ts    // e.g. requiresAuth, redirectAuthed
+            |-- auth.middleware.ts    // e.g. requiresAuth, redirectAuthed
             |-- postMiddlewares.ts    // e.g. requiresEditor
             |-- ...
         |-- routes/
-            |-- appRoutes.ts    // // Routes for App static pages: Home, About, ContactUs...
-            |-- authRoutes.ts   // Auth routes: Login, SignUp, ResetPassword...
+            |-- appRoute.ts    // // Routes for App static pages: Home, About, ContactUs...
+            |-- auth.route.ts   // Auth routes: Login, SignUp, ResetPassword...
             |-- postRouts.ts    // Routes for module Post: CreatePost, EditPost, ShowPost, IndexPosts...
             |-- ...
 ```
@@ -782,11 +782,11 @@ app.mount('#app')
 1. Categorise routes in needed
 
 ```typescript
-// ./src/router/routes/appRoutes.ts
+// ./src/router/routes/appRoute.ts
 
 import { RouteRecordRaw } from 'vue-router'
 
-const appRoutes: Array<RouteRecordRaw> = [
+const appRoute: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'app.home',
@@ -794,15 +794,15 @@ const appRoutes: Array<RouteRecordRaw> = [
   }
 ]
 
-export default appRoutes
+export default appRoute
 ```
 
 ```typescript
-// ./src/router/routes/authRoutes.ts
+// ./src/router/routes/auth.route.ts
 
 import { RouteRecordRaw } from 'vue-router'
 
-const authRoutes: Array<RouteRecordRaw> = [
+const authRoute: Array<RouteRecordRaw> = [
   {
     path: '/login',
     name: 'auth.login',
@@ -811,7 +811,7 @@ const authRoutes: Array<RouteRecordRaw> = [
   }
 ]
 
-export default authRoutes
+export default authRoute
 ```
 
 > In general, it's a good idea to always use dynamic imports for all your routes.
@@ -823,11 +823,11 @@ export default authRoutes
 ```typescript
 // ./src/router/route/index.ts
 
-import appRoutes from '@/router/routes/appRoutes'
-import authRoutes from '@/router/routes/authRoutes'
-import postRoutes from '@/router/routes/postRoutes'
+import appRoute from '@/router/routes/appRoute'
+import authRoute from '@/router/routes/authRoute'
+import postRoute from '@/router/routes/postRoute'
 
-const routes = [...appRoutes, ...authRoutes, ...postRoutes]
+const routes = [...appRoute, ...authRoute, ...postRoute]
 
 export default routes
 ```
@@ -1088,7 +1088,7 @@ File structure:
 |-- src/
     |-- api/
         |-- index.ts
-        |-- auth.ts
+        |-- auth.service.ts
         |-- user.ts
         |-- ...
 ```
@@ -1108,7 +1108,7 @@ export default { getUserList }
 ```
 
 ```typescript
-// ./src/api/auth.ts
+// ./src/api/auth.service.ts
 
 import { apiRequests as api } from '@/utils/http'
 

@@ -2,9 +2,9 @@ import { createStore, Store, useStore as baseUseStore } from 'vuex'
 import { InjectionKey } from 'vue'
 import { RootState } from '@/types/vuex/root'
 import config from '@/utils/config'
-import column from '@/store/modules/column'
-import post from '@/store/modules/post'
-import auth from '@/store/modules/auth'
+import column from '@/store/modules/column.module'
+import post from '@/store/modules/post.module'
+import auth from '@/store/modules/auth.module'
 
 // Define typings for the store state.
 // export interface State {

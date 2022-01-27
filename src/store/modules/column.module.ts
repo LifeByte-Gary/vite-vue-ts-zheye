@@ -1,7 +1,7 @@
 import { ColumnActionTree, ColumnGetterTree, ColumnMutationTree, ColumnState } from '@/types/vuex/column'
 import { Module } from 'vuex'
 import { RootState } from '@/types/vuex/root'
-import api from '@/api'
+import api from '@/services'
 import defaultAvatar from '@/assets/column.jpg'
 
 const state: ColumnState = {

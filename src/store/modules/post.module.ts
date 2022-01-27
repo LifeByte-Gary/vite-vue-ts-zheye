@@ -1,7 +1,7 @@
 import { PostActionTree, PostGetterTree, PostMutationTree, PostState } from '@/types/vuex/post'
 import { Module } from 'vuex'
 import { RootState } from '@/types/vuex/root'
-import api from '@/api'
+import api from '@/services'
 
 const state: PostState = {
   postList: []

@@ -1,7 +1,7 @@
 import { AuthActionTree, AuthGetterTree, AuthMutationTree, AuthState } from '@/types/vuex/auth'
 import { Module } from 'vuex'
 import { RootState } from '@/types/vuex/root'
-import api from '@/api'
+import api from '@/services'
 import { apiAxiosInstance } from '@/utils/http'
 
 const state: AuthState = {

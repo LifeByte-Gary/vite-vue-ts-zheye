@@ -1,6 +1,6 @@
 import { RouteRecordRaw } from 'vue-router'
 
-const columnRoutes: Array<RouteRecordRaw> = [
+const columnRoute: Array<RouteRecordRaw> = [
   {
     path: '/columns/:id',
     name: 'columns.show',
@@ -8,4 +8,4 @@ const columnRoutes: Array<RouteRecordRaw> = [
   }
 ]
 
-export default columnRoutes
+export default columnRoute

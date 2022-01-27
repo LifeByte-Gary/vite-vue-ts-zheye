@@ -1,6 +1,6 @@
 import { RouteRecordRaw } from 'vue-router'
 
-const appRoutes: Array<RouteRecordRaw> = [
+const appRoute: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'app.home',
@@ -8,4 +8,4 @@ const appRoutes: Array<RouteRecordRaw> = [
   }
 ]
 
-export default appRoutes
+export default appRoute

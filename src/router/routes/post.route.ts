@@ -1,6 +1,6 @@
 import { RouteRecordRaw } from 'vue-router'
 
-const postRoutes: Array<RouteRecordRaw> = [
+const postRoute: Array<RouteRecordRaw> = [
   {
     path: '/post/create',
     name: 'posts.create',
@@ -9,4 +9,4 @@ const postRoutes: Array<RouteRecordRaw> = [
   }
 ]
 
-export default postRoutes
+export default postRoute

@@ -1,6 +1,6 @@
 import { RouteRecordRaw } from 'vue-router'
 
-const authRoutes: Array<RouteRecordRaw> = [
+const authRoute: Array<RouteRecordRaw> = [
   {
     path: '/login',
     name: 'auth.login',
@@ -9,4 +9,4 @@ const authRoutes: Array<RouteRecordRaw> = [
   }
 ]
 
-export default authRoutes
+export default authRoute
