@@ -4,9 +4,11 @@ import { RootState } from '@/types/vuex/root'
 import api from '@/services'
 import { apiAxiosInstance } from '@/utils/http'
 
+const jwt = localStorage.getItem('token')
+
 const state: AuthState = {
-  isLoggedIn: false,
-  token: null,
+  isLoggedIn: !!jwt,
+  token: jwt || null,
   currentUser: undefined
 }
 
@@ -17,6 +19,7 @@ const mutations: AuthMutationTree = {
     authState.isLoggedIn = true
     authState.token = token
 
+    localStorage.setItem('token', token)
     apiAxiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`
   },
   setCurrentUser: (authState, currentUser) => {
@@ -45,6 +48,7 @@ const actions: AuthActionTree = {
     const currentUser = response.data.data
 
     commit('setCurrentUser', currentUser)
+    commit('login')
   }
 }
 

@@ -8,9 +8,12 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  // console.log(to.meta.redirectAuthed)
+  console.log(store.state.auth.isLoggedIn)
   if (to.meta.requiresAuth && !store.state.auth.isLoggedIn) {
     next({ name: 'auth.login' })
   } else if (to.meta.redirectAuthed && store.state.auth.isLoggedIn) {
+    console.log(123)
     next({ name: 'app.home' })
   } else {
     next()

@@ -9,14 +9,27 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { computed, defineComponent, onMounted } from 'vue'
 import AppHeader from '@/components/app/AppHeader.vue'
 import AppFooter from '@/components/app/AppFooter.vue'
+import { useStore } from '@/store'
+import { apiAxiosInstance } from '@/utils/http'
 
 export default defineComponent({
   name: 'App',
   components: { AppHeader, AppFooter },
   setup() {
+    const store = useStore()
+    const token = computed(() => store.state.auth.token)
+    const currentUser = computed(() => store.state.auth.currentUser)
+
+    onMounted(() => {
+      if (!currentUser.value && token.value) {
+        apiAxiosInstance.defaults.headers.common.Authorization = `Bearer ${token.value}`
+        store.dispatch('auth/fetchCurrentUser')
+      }
+    })
+
     return {}
   }
 })
