@@ -728,12 +728,12 @@ followings.
         |-- index.ts
         |-- middlewares/
             |-- auth.middleware.ts    // e.g. requiresAuth, redirectAuthed
-            |-- postMiddlewares.ts    // e.g. requiresEditor
+            |-- post.middleware.ts    // e.g. requiresEditor
             |-- ...
         |-- routes/
-            |-- appRoute.ts    // // Routes for App static pages: Home, About, ContactUs...
+            |-- app.route.ts    // Routes for App static pages: Home, About, ContactUs...
             |-- auth.route.ts   // Auth routes: Login, SignUp, ResetPassword...
-            |-- postRouts.ts    // Routes for module Post: CreatePost, EditPost, ShowPost, IndexPosts...
+            |-- post.route.ts   // Routes for module Post: CreatePost, EditPost, ShowPost, IndexPosts...
             |-- ...
 ```
 
@@ -911,12 +911,12 @@ For any non-trivial app, we will likely need to leverage modules. Here's an exam
 ```text
 |-- src/
     |-- store/
-        ├── index.js          # where we assemble modules and export the store
-        ├── actions.js        # root actions
-        ├── mutations.js      # root mutations
+        ├── index.ts          # where we assemble modules and export the store
+        ├── actions.ts        # root actions
+        ├── mutations.ts      # root mutations
         └── modules/
-            ├── cart.js       # cart module
-            └── products.js   # products module
+            ├── cart.module.ts       # cart module
+            └── products.module.ts   # products module
 ```
 
 #### #### Encapsulation by modules with TypeScrip
@@ -1240,23 +1240,23 @@ export const apiRequests = {
 
 #### #### Work with API requests
 
-- Create `./src/api` directory to group APIs by model / services.
+- Create `./src/services` directory to group APIs by model / services.
 
 File structure:
 
 ```text
 |-- src/
-    |-- api/
+    |-- services/
         |-- index.ts
         |-- auth.service.ts
-        |-- user.ts
+        |-- user.service.ts
         |-- ...
 ```
 
 - Config APIs in where they belong to
 
 ```typescript
-// ./src/api/user.ts
+// ./src/services/user.service.ts
 
 import { apiRequests as api } from '@/utils/http'
 
@@ -1268,7 +1268,7 @@ export default { getUserList }
 ```
 
 ```typescript
-// ./src/api/auth.service.ts
+// ./src/services/auth.service.ts
 
 import { apiRequests as api } from '@/utils/http'
 
@@ -1282,7 +1282,7 @@ export default { login }
 - Export group APIs in `./src/api/index.ts`
 
 ```typescript
-// ./src/apis/index.ts
+// ./src/services/index.ts
 
 import auth from '@/apis/auth'
 import post from '@/apis/post'
@@ -1299,7 +1299,7 @@ Now we are ready to request APIs in `.ts` files or Vue components, easy and clea
 </template>
 <script lang="ts">
 import { defineComponent } from 'vue'
-import api from "@/api";
+import api from "@/services";
 import { onMounted } from "@vue/runtime-core";
 
 export default defineComponent({
@@ -1325,7 +1325,7 @@ export default defineComponent({
 ```typescript
 // someFile.ts
 
-import api from '@/api'
+import api from '@/services'
 
 const asyncFunction = async () => {
   try {
