@@ -119,6 +119,49 @@ Config `tsconfig.json` for TypeScript support
 }
 ```
 
+## ## Docker Support
+
+### ### Initialise docker compose
+Create *docker-compose.yml* under project root path
+```yaml
+version: "3"
+services:
+  app:
+    container_name: your-container-name
+    user: "root"
+    image: node:16
+    working_dir: /var/www/html/app/
+    entrypoint: /bin/bash
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - .:/var/www/html/app
+    ports:
+      - "3000:3000"
+    tty: true
+```
+
+Config *vite.config.ts*: set **host** option
+```typescript
+export default defineConfig({
+  plugins: [vue()],
+  server: {
+    host: '0.0.0.0'
+  }
+})
+```
+
+Custom docker compose project name in *.env*
+```dotenv
+COMPOSE_PROJECT_NAME=project-name
+```
+
+### ### Run project in Docker
+1. Got to the root path
+2. Start docker container: ```$ docker compose up -d```
+3. Open container's bash: ```$ docker exec -it [container-name] /bin/bash```
+
+
 ## ## EditorConfig
 
 Create file `.editorconfig`
