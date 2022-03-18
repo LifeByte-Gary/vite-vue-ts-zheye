@@ -80,38 +80,27 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src') // 设置 `@` 指向 `src` 目录
+      // Other path alias...
     }
   },
   base: './', // 设置打包路径
   server: {
     port: 4000, // 设置服务启动端口号
-    open: true, // 设置服务启动时是否自动打开浏览器
     cors: true // 允许跨域
 
-    // 设置代理，根据我们项目实际情况配置
-    // proxy: {
-    //   '/api': {
-    //     target: 'http://xxx.xxx.xxx.xxx:8000',
-    //     changeOrigin: true,
-    //     secure: false,
-    //     rewrite: (path) => path.replace('/api/', '/')
-    //   }
-    // }
   }
 })
 ```
 
 Config `tsconfig.json` for TypeScript support
 
-```text
+```typescript
 {
   "compilerOptions": {
     // ...
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     }
   },
 
@@ -476,7 +465,7 @@ Store type declaration files into directory `./scr/typings` and export them in `
 
 ```text
 |-- src/
-    |-- typings/
+    |-- types/
         |-- index.d.ts
         |-- modules/
             |-- user.d.ts
