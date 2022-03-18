@@ -80,12 +80,12 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src') // 设置 `@` 指向 `src` 目录
+      // Other alias
     }
   },
   base: './', // 设置打包路径
   server: {
     port: 4000, // 设置服务启动端口号
-    open: true, // 设置服务启动时是否自动打开浏览器
     cors: true // 允许跨域
 
     // 设置代理，根据我们项目实际情况配置
@@ -424,6 +424,39 @@ Then config `.husky/pre-commit`:
 
 npx lint-staged
 ```
+> If you have multiple sites(Vue projects) in a same repository or put your Vue project in a sub-folder, then you need to direct to the sub-folder and run ```npx lint-staged```
+
+For example: your repository file structure looks like this:
+```text
+|-- my-repo
+    |-- .husky
+    |-- site-1
+        |-- .eslintrc.js
+        |-- ...
+    |-- site-2
+        |-- .eslintrc.js
+        |-- ...    
+```
+
+> According to ESLint's [Cascading and Hierarchy](https://eslint.org/docs/user-guide/configuring/configuration-files#cascading-and-hierarchy), it is very important to set ```root: true``` in *.eslintrc.js*, if you don's want ESLint searches up the directory structure.
+
+```typescript
+// .eslintrc.js
+
+module.exports = {
+  root: true,
+  // ...
+}
+```
+
+Then your ```.husky/pre-commit``` should be like this:
+
+```text
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+cd site-1 && npx lint-staged && cd ../site-2 && npx lint-staged
+```
 
 ## ## Add Type Declaration Folder
 
@@ -433,7 +466,7 @@ Store type declaration files into directory `./scr/typings` and export them in `
 
 ```text
 |-- src/
-    |-- typings/
+    |-- types/
         |-- index.d.ts
         |-- modules/
             |-- user.d.ts
