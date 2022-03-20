@@ -396,6 +396,78 @@ module.exports = {
 
 </details>
 
+### Use airbnb-typescript instead of airbnb
+1. Install ```eslint-config-airbnb-typescript``` & ```vue-eslint-parser```
+```shell
+$ npm i -D eslint-config-airbnb-typescript vue-eslint-parser
+```
+
+2. Create ```tsconfig.eslint.json``` for ESLint
+```json
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "./**/*.ts",
+    "./.*.js",
+  ]
+}
+```
+
+3. Exclude ```.eslintrc.js``` from ESLint via ```.eslintignore```
+```text
+// .eslintignore
+
+.eslintrc.js
+```
+
+4. Config ```.eslintrc.js```
+```javascript
+module.exports = {
+  root: true,
+  env: {
+    browser: true,
+    es2021: true,
+    node: true,
+    'vue/setup-compiler-macros': true
+  },
+  extends: ['plugin:vue/vue3-essential', 'airbnb-typescript/base', 'plugin:prettier/recommended'],
+  parser: 'vue-eslint-parser',
+  parserOptions: {
+    project: ['./tsconfig.eslint.json'],
+    ecmaVersion: 'latest',
+    parser: '@typescript-eslint/parser',
+    sourceType: 'module',
+    extraFileExtensions: ['.vue']
+  },
+  plugins: ['vue', '@typescript-eslint', 'import'],
+  settings: {
+    'import/resolver': {
+      typescript: {} // this loads <rootdir> / tsconfig.json to eslint,
+    }
+  },
+  rules: {
+    'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
+    'vue/script-setup-uses-vars': 'error',
+    'import/extensions': [
+      'error',
+      'ignorePackages',
+      {
+        js: 'never',
+        jsx: 'never',
+        ts: 'never',
+        tsx: 'never'
+      }
+    ]
+  }
+}
+```
+
+> It is important to set ```parser: 'vue-eslint-parser'``` and ```parserOptions: { project: ['./tsconfig.eslint.json'], extraFileExtensions: ['.vue'] }``` and ```plugins: ['vue', '@typescript-eslint', 'import']``` to enable ESLint to work with Vue.
+
 ## ## Integrate husky and lint-staged
 
 ### ### Config husky
@@ -1141,160 +1213,115 @@ $ npm install axios
 
 ### ### Encapsulation
 
-#### #### Config Axios
-
-Define a function to create template axios instance, this can be used to customise multiple axios instance that share
-same general configurations. (e.g. HTTP axios instance and API axios instance share same general `timeout` config and
-general `response interceptors`, though they also have their own `baseUrl` and `request interceptors`).
+#### #### Encapsulate Axios
 
 ```typescript
-// ./src/axios/index.ts
+// ./src/http/index.ts
+
+/** Encapsulate Axios */
 
 import axios from 'axios'
 
-const createTemplateAxiosInstance = () => {
-  const instance = axios.create({
-    baseURL: '',
-    timeout: 3000,
-    headers: {}
-  })
-
-  // Define general interceptors ...
-  instance.interceptors.request.use(function() {
-    /*...*/
-  });
-
-  return instance
+/** Request error handler. */
+const handleError = (status: number, message: any) => {
+  console.error(`[TMGM] Request error: [${status}] ${message}`)
 }
 
-export default createTemplateAxiosInstance()
+/** Initialise Axios instance. */
+const instance = axios.create({
+  headers: {
+    'Access-Control-Allow-Origin-Type': '*'
+  },
+  timeout: 1000 * 30,
+  baseURL: '',
+  withCredentials: false
+})
+
+/** Use request interceptor. */
+instance.interceptors.request.use(
+  (requestConfig) => {
+    return requestConfig
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
+/** Use response interceptor. */
+instance.interceptors.response.use(
+  (response) => {
+    return response
+  },
+  (error) => {
+    if (error) {
+      handleError(error.status, error.data.message)
+      return Promise.reject(error)
+    }
+  }
+)
+
+export default instance
 ```
 
-#### #### Create `http.ts` utility module and export customised request functions
+#### #### Encapsulate HTTP requests
 
 ```typescript
-// ./src/utils/http.ts
+// ./src/http/request.ts
 
-import axios from '@/axios'
+/** Encapsulate Axios requests. */
 import { AxiosRequestConfig } from 'axios'
-import config from '@/utils/config'
+import http from '@/http'
 
-/**
- * Create project-level HTTP client.
- */
+export class Request {
+  /** GET request. */
+  static get = async (url: string, params?: any, config?: AxiosRequestConfig) => {
+    try {
+      return await http.get(url, { params: params, ...config })
+    } catch (error) {
+      console.error('[TMGM] Request error: ', error)
+      throw error
+    }
+  }
 
-// Create project-level axios instance.
-const httpAxiosInstance = axios
-
-// Define project-level HTTP requests.
-const httpGet = async (url: string, configs?: AxiosRequestConfig) => {
-  try {
-    const response = httpAxiosInstance.get(url, configs)
-
-    // Add project-level response handler ...
-
-    return response
-  } catch (error) {
-    // Add project-level error handler ...
-
-    throw error
+  /** POST request. */
+  static post = async (url: string, data?: any, config?: AxiosRequestConfig) => {
+    try {
+      return await http.post(url, data, { ...config })
+    } catch (error) {
+      console.error('[TMGM] Response error: ', error)
+      throw error
+    }
   }
 }
 
-const httpPost = async (url: string, data?: any, configs?: AxiosRequestConfig) => {
-  // Return Axios post request directly if you have neither global response nor error handler.
-  return httpAxiosInstance.post(url, data, configs)
-}
-
-const httpPut = async (url: string, data?: any, configs?: AxiosRequestConfig) => {
-  return httpAxiosInstance.put(url, data, configs)
-}
-
-const httpPatch = async (url: string, data?: any, configs?: AxiosRequestConfig) => {
-  return httpAxiosInstance.patch(url, data, configs)
-}
-
-const httpDelete = async (url: string, configs?: AxiosRequestConfig) => {
-  return httpAxiosInstance.delete(url, configs)
-}
-
-const httpRequests = {
-  get: httpGet,
-  post: httpPost,
-  put: httpPut,
-  patch: httpPatch,
-  delete: httpDelete
-}
-
-// Export as default so that they can be used globally in ease. (e.g. http.get())
-export default httpRequests
-
-/**
- * Create API-level HTTP client.
- */
-
-// Create API-level axios instance.
-const apiAxiosInstance = axios
-
-// Config api axios instance.
-apiAxiosInstance.defaults.baseURL = `${config.services.apiBaseUrl}${config.services.apiVersion ? `/v${config.services.apiVersion}` : ''}`
-
-// Define API-level HTTP requests.
-const apiGet = async (url: string, configs?: AxiosRequestConfig) => {
-  return httpRequests.get(url, configs)
-}
-
-const apiPost = async (url: string, data?: any, configs?: AxiosRequestConfig) => {
-  // Return Axios post request directly if you have neither global response nor error handler.
-  return httpRequests.post(url, data, configs)
-}
-
-const apiPut = async (url: string, data?: any, configs?: AxiosRequestConfig) => {
-  return httpRequests.put(url, data, configs)
-}
-
-const apiPatch = async (url: string, data?: any, configs?: AxiosRequestConfig) => {
-  return httpRequests.patch(url, data, configs)
-}
-
-const apiDelete = async (url: string, configs?: AxiosRequestConfig) => {
-  return httpRequests.delete(url, configs)
-}
-
-// Export API requests so that they can be used for API denfiition
-export const apiRequests = {
-  get: apiGet,
-  post: apiPost,
-  put: apiPut,
-  patch: apiPatch,
-  delete: apiDelete
-}
 ```
 
 #### #### Work with API requests
 
-- Create `./src/services` directory to group APIs by model / services.
+- Create `./src/http/api` directory to group APIs by model / services.
 
 File structure:
 
 ```text
 |-- src/
-    |-- services/
+    |-- http/
         |-- index.ts
-        |-- auth.service.ts
-        |-- user.service.ts
-        |-- ...
+        |-- request.ts
+        |-- api
+            |-- auth.api.ts
+            |-- user.api.ts
+            |-- ...
 ```
 
-- Config APIs in where they belong to
+- Config APIs at where they belong to
 
 ```typescript
 // ./src/services/user.service.ts
 
-import { apiRequests as api } from '@/utils/http'
+import Request from '@/http/request'
 
 const getUserList = async () => {
-  return api.get(`/users/index`)
+  return Request.get(`/users/index`)
 }
 
 export default { getUserList }
@@ -1303,16 +1330,16 @@ export default { getUserList }
 ```typescript
 // ./src/services/auth.service.ts
 
-import { apiRequests as api } from '@/utils/http'
+import Request from '@/http/request'
 
 const login = (data: { username: string; password: string }) => {
-  return api.post(`/login`, data)
+  return Request.post(`/login`, data)
 }
 
 export default { login }
 ```
 
-- Export group APIs in `./src/api/index.ts`
+- Export group APIs in `./src/http/api/index.ts`
 
 ```typescript
 // ./src/services/index.ts
@@ -1332,7 +1359,7 @@ Now we are ready to request APIs in `.ts` files or Vue components, easy and clea
 </template>
 <script lang="ts">
 import { defineComponent } from 'vue'
-import api from "@/services";
+import api from "@/http/api";
 import { onMounted } from "@vue/runtime-core";
 
 export default defineComponent({
@@ -1358,7 +1385,7 @@ export default defineComponent({
 ```typescript
 // someFile.ts
 
-import api from '@/services'
+import api from '@/http/api'
 
 const asyncFunction = async () => {
   try {
