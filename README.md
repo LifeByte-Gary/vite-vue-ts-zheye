@@ -126,7 +126,7 @@ services:
     volumes:
       - .:/var/www/html/app
     ports:
-      - "3000:3000"
+      - "80:80"
     tty: true
 ```
 
@@ -135,7 +135,8 @@ Config *vite.config.ts*: set **host** option
 export default defineConfig({
   plugins: [vue()],
   server: {
-    host: '0.0.0.0'
+    host: '0.0.0.0',
+    port: 80
   }
 })
 ```
@@ -144,6 +145,10 @@ Custom docker compose project name in *.env*
 ```dotenv
 COMPOSE_PROJECT_NAME=project-name
 ```
+
+> To avoid portal conflict, don't forget to set back-end URL port different from 80.
+> 
+> In Laravel, set ```APP_PORT``` in *.env*.
 
 ### ### Run project in Docker
 1. Got to the root path
