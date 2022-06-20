@@ -1257,8 +1257,6 @@ $ npm install axios
 ```typescript
 // ./src/http/index.ts
 
-/** Encapsulate Axios */
-
 import axios from 'axios'
 
 /** Request error handler. */
@@ -1292,9 +1290,22 @@ instance.interceptors.response.use(
     return response
   },
   (error) => {
-    if (error) {
-      handleError(error.status, error.data.message)
+    if (error && error.response) {
+      // Construct error response
+      error.response.data = {
+        status: error.response.status,
+        success: false,
+        message: error.response.data?.message,
+        errors: error.response.data?.errors,
+        ...error.response.data
+      }
+
+      handleError(error.response)
+
       return Promise.reject(error)
+    } else {
+      //TODO: Global failed response handler
+      alert('Failed to response')
     }
   }
 )
@@ -1337,7 +1348,7 @@ export class Request {
 
 #### #### Work with API requests
 
-- Create `./src/http/api` directory to group APIs by model / services.
+- Create `./src/http/apis` directory to group APIs by model / services.
 
 File structure:
 
@@ -1346,47 +1357,41 @@ File structure:
     |-- http/
         |-- index.ts
         |-- request.ts
-        |-- api
-            |-- auth.api.ts
-            |-- user.api.ts
+        |-- apis
+            |-- auth.apis.ts
+            |-- user.apis.ts
             |-- ...
 ```
 
 - Config APIs at where they belong to
 
 ```typescript
-// ./src/services/user.service.ts
+// ./src/apis/auth.apis.ts
 
-import Request from '@/http/request'
+import requests from '@/http/requests'
 
-const getUserList = async () => {
-  return Request.get(`/users/index`)
+const serviceApis = {
+  signUp: async (data: object) => {
+    const response = await requests.post('/register', data)
+    return response?.data
+  }
 }
 
-export default { getUserList }
+export default serviceApis
 ```
 
+- Export group APIs in `./src/http/apis/index.ts`
+
 ```typescript
-// ./src/services/auth.service.ts
+// ./src/apis/index.ts
 
-import Request from '@/http/request'
+import appApis from '@/http/apis/app.apis'
+import serviceApis from '@/http/apis/service.apis'
 
-const login = (data: { username: string; password: string }) => {
-  return Request.post(`/login`, data)
+export default {
+  app: appApis,
+  service: serviceApis
 }
-
-export default { login }
-```
-
-- Export group APIs in `./src/http/api/index.ts`
-
-```typescript
-// ./src/services/index.ts
-
-import auth from '@/apis/auth'
-import post from '@/apis/post'
-
-export default { auth, post }
 ```
 
 Now we are ready to request APIs in `.ts` files or Vue components, easy and clean!
@@ -1398,13 +1403,13 @@ Now we are ready to request APIs in `.ts` files or Vue components, easy and clea
 </template>
 <script lang="ts">
 import { defineComponent } from 'vue'
-import api from "@/api";
+import apis from "@/http/apis";
 import { onMounted } from "@vue/runtime-core";
 
 export default defineComponent({
   setup() {
     onMounted(() => {
-      api.user
+      apis.user
         .getUserList()
         .then((response) => {
           const userList = response?.data
@@ -1424,11 +1429,11 @@ export default defineComponent({
 ```typescript
 // someFile.ts
 
-import api from '@/http/api'
+import apis from '@/http/apis'
 
 const asyncFunction = async () => {
   try {
-    const response = await api.user.getUserList()
+    const response = await apis.user.getUserList()
     const userList = response?.data
     // Handle postList ...
 
