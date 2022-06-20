@@ -80,23 +80,14 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src') // 设置 `@` 指向 `src` 目录
-      // Other alias
     }
   },
   base: './', // 设置打包路径
   server: {
     port: 4000, // 设置服务启动端口号
+    open: true, // 设置服务启动时是否自动打开浏览器
     cors: true // 允许跨域
 
-    // 设置代理，根据我们项目实际情况配置
-    // proxy: {
-    //   '/api': {
-    //     target: 'http://xxx.xxx.xxx.xxx:8000',
-    //     changeOrigin: true,
-    //     secure: false,
-    //     rewrite: (path) => path.replace('/api/', '/')
-    //   }
-    // }
   }
 })
 ```
@@ -118,6 +109,54 @@ Config `tsconfig.json` for TypeScript support
   // ...
 }
 ```
+
+## ## Docker Support
+
+### ### Initialise docker compose
+Create *docker-compose.yml* under project root path
+```yaml
+version: "3"
+services:
+  app:
+    container_name: your-container-name
+    user: "root"
+    image: node:16
+    working_dir: /var/www/html/app/
+    entrypoint: /bin/bash
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - .:/var/www/html/app
+    ports:
+      - "80:80"
+    tty: true
+```
+
+Config *vite.config.ts*: set **host** option
+```typescript
+export default defineConfig({
+  plugins: [vue()],
+  server: {
+    host: '0.0.0.0',
+    port: 80
+  }
+})
+```
+
+Custom docker compose project name in *.env*
+```dotenv
+COMPOSE_PROJECT_NAME=project-name
+```
+
+> To avoid portal conflict, don't forget to set back-end URL port different from 80.
+> 
+> In Laravel, set ```APP_PORT``` in *.env*.
+
+### ### Run project in Docker
+1. Got to the root path
+2. Start docker container: ```$ docker compose up -d```
+3. Open container's bash: ```$ docker exec -it [container-name] /bin/bash```
+
 
 ## ## EditorConfig
 
@@ -1359,7 +1398,7 @@ Now we are ready to request APIs in `.ts` files or Vue components, easy and clea
 </template>
 <script lang="ts">
 import { defineComponent } from 'vue'
-import api from "@/http/api";
+import api from "@/api";
 import { onMounted } from "@vue/runtime-core";
 
 export default defineComponent({
